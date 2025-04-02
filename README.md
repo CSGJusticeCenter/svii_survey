@@ -1,95 +1,28 @@
-__This template contains the key elements that should be included in a project README. Elements enclosed in "\<\>" brackets should be updated with info from your project. Some sections may not apply to your project, and some projects may have additional sections/information. Edit this template to fit your needs!__
+# SVII Survey (2024)
 
-# \<Project Name\>
-\<Very brief description of repository contents\>  
+This repository contains code that does four things:
 
-## Project overview  
-\<Description of project - purpose, goals, background, etc.\>  
-\<Links to research or analysis plan\>  
+1) Formats data for imputation.
+2) Produces national estimates and state-by-state costs
 
-## Assigned Research Staff
-\<Names and roles\>  
+## Data
 
-## SharePoint folder  
-[JC Research/Documents/\<folder name\>](<link-to-folder>)  
+This repository uses MCLC data from state specific Google Sheets. Version 4 had manual edits in Excel and replaced total admissions and total population with BJS numbers. Therefore, the most recent version of the data is version 5.  
 
-```
-|-- <main project folder> 
-  |-- <subfolder>               # <description of contents>
-      |-- <subfolder>           # <description of contents>
-  |-- <subfolder>               # <description of contents>
-      |-- <subfolder>           # <description of contents>
-```  
+## Repository Structure 
 
-[\<Policy team folder name/path - if applicable\>](<link-to-folder>)  
-  - \<notes\>
+    |-- code 
+      |-- survey
+          |-- 03_clean.R               # Format data like 2022 survey data, replace data with BJS numbers
+          |-- execute_report.R         # create final results for national report - executes 05_multiple_imputation.R
+          |-- 05_multiple_imputation.R 
+              |-- sources the following programs in this order: 03_clean.R, MImp1.R, MImp3.R, MImp3.R, Costs.R
 
-## Repository  
-\<Relevant info about repository overall - e.g., if it's connected to another repo for the same project, etc.\>
+## INSTRUCTIONS
 
-### Branches  
-\<Description of repo branches - names, which branche(s) to work out of, when to make new branches, etc.\>
-- __main__: \<description\>
-- __develop__: \<description\>
-- etc.
+In order to successfully produce national estimates and state-by-state costs, survey programs should be run in the following order: 
 
-### Folder structure  
-\<Information about folders and files in repo\>   
+1) execute_report.R
 
-```
-|-- <repo name> 
-  |-- <folder>                  # <description of contents>
-      |-- <subfolder>           # <description of contents>
-          |-- <file>            # <description of file>
-      |-- <file>                # <description of file>
-  |-- <folder>                  # <description of contents>
-      |-- <subfolder>           # <description of contents>
-      |-- <file>                # <description of file>      
-```
-
-## Data  
-\<Information about data files used in project - raw file types, files used for analysis, known concerns or problems with data, etc.\>  
-\<Information or links to background data - census data, reports published by agencies, etc.\>
-
-### Types of data
-\<Different sources/types of data (e.g., arrest data, DOC parole data, census data, etc.) and descriptions\>   
-  - __\<data type\>__: \<description\>  
-  - __\<data type\>__: \<description\>  
-  - __\<data type\>__: \<description\>  
-  - __\<data type\>__: \<description\>  
-
-### Data folders  
-\<SharePoint data folders and contents\>
-
-```
-|-- <main project folder> 
-  |-- data
-      |-- raw                 # <description of contents>
-          |-- <subfolder>     # <description of contents>          
-      |-- analysis            # <description of contents>
-          |-- <subfolder>     # <description of contents>
-      |-- deliverables        # <description of contents>
-          |-- <subfolder>     # <description of contents>      
-```  
-
-## \<Processes\>
-\<Steps to run code, generate reports, etc.\>
-
-1. \<step 1\>: \<description\>
-2. \<step 2\>: \<description\>
-3. \<step 3\>: \<description\>
-
-## Deliverables
-\<Information about project deliverables, including where files are saved and how they are distributed\>   
-\<Netlify sites can be listed here or in a separate secion, depending on how complex\>
-
-## Netlify site (if applicable)
-\<Information about netlify site, including address/password and how to update the site\>   
-\<If the site builds in a separate repo, this section should include a link to that repo's README\>   
-
-## Notes
-\<Any additional information that someone would need to know about this project\>   
-
-
-
+    - execute_report.R accepts parameters (set to a default for the current survey year) as well as for setting output file name and format.
 
