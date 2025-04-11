@@ -57,6 +57,7 @@ MCLCsurveyyear <- params$yearofsurvey
 #years of data
 year     <- as.character(2018:MCLCsurveyyear)
 refyear  <- as.character(2019:MCLCsurveyyear)
+missyear <- c(year) #as.character(2022:2023)  #use for changing handling of missing data years
 
 #for labeling tables in output
 tablevals.pretty <- c('Overall Admissions',
