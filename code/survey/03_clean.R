@@ -11,7 +11,7 @@ sp_data_path <- csgjcr::csg_sp_path(file.path("50 State Revocations Project",
                                               "50 State Survey (2024)"))
 
 #import and clean adm/pop data
-adm_pop_analysis <- readRDS(paste0(sp_data_path,"/Data/raw/combined/svii_main.rds")) |>
+adm_pop_analysis1 <- readRDS(paste0(sp_data_path,"/Data/raw/combined/svii_main.rds")) |>
   select(-c(FY_end, time_period, metric_short, type, metric_abbr, group_cat, state_abbr, state_fips)) |>
   filter(group == "aggregate", 
          metric != "Unknown Parole Violation Admissions",
@@ -97,7 +97,143 @@ var.labels = c(states                                     = "State name",
                new_offense_parole_violation_population    = "New crime violator population, parole"
                )
 
-adm_pop_analysis = upData(adm_pop_analysis, labels = var.labels)
+adm_pop_analysis1 = upData(adm_pop_analysis1, labels = var.labels)
 
-write.xlsx(adm_pop_analysis, file = paste0(sp_data_path, "/Data/analysis/national_estimates/mclc_data_2024.xlsx"))
+##########################################################
+## MISSINGS LOGIC
+## TO USE FOR WEB APP AND FOR IMPUTATION
+##########################################################
+
+adm_pop_analysis <- adm_pop_analysis1 |>
+  mutate(
+    ## Remove inaccurate totals: 
+    #POPULATION
+    total_new_offense_violation_population = case_when((  total_new_offense_violation_population == new_offense_probation_violation_population) |
+                                                         (total_new_offense_violation_population == new_offense_parole_violation_population) 
+                                                       ~ NA,
+                                                       TRUE ~ total_new_offense_violation_population),
+    
+    total_technical_violation_population   = case_when((  total_technical_violation_population == technical_probation_violation_population) |
+                                                         (total_technical_violation_population == technical_parole_violation_population) 
+                                                       ~ NA,
+                                                       TRUE ~ total_technical_violation_population),  
+    
+    parole_violation_population            = case_when((  parole_violation_population == technical_parole_violation_population) |
+                                                         (parole_violation_population == new_offense_parole_violation_population) 
+                                                     ~ NA,
+                                                     TRUE ~ parole_violation_population), 
+    
+    probation_violation_population         = case_when((  probation_violation_population == technical_probation_violation_population) |
+                                                         (probation_violation_population == new_offense_probation_violation_population) 
+                                                  ~ NA,
+                                                  TRUE ~ probation_violation_population), 
+    
+    total_supervision_violation_population = case_when((  total_supervision_violation_population == probation_violation_population) |
+                                                         (total_supervision_violation_population == parole_violation_population) 
+                                                       ~ NA,
+                                                       TRUE ~ total_supervision_violation_population),    
+    
+    #ADMISSIONS
+    total_new_offense_violation_admissions = case_when((  total_new_offense_violation_admissions == new_offense_probation_violation_admissions) |
+                                                         (total_new_offense_violation_admissions == new_offense_parole_violation_admissions) 
+                                                       ~ NA,
+                                                       TRUE ~ total_new_offense_violation_admissions),
+    
+    total_technical_violation_admissions   = case_when((  total_technical_violation_admissions == technical_probation_violation_admissions) |
+                                                         (total_technical_violation_admissions == technical_parole_violation_admissions) 
+                                                     ~ NA,
+                                                     TRUE ~ total_technical_violation_admissions), 
+    
+    parole_violation_admissions            = case_when((  parole_violation_admissions == technical_parole_violation_admissions) |
+                                                         (parole_violation_admissions == new_offense_parole_violation_admissions) 
+                                                  ~ NA,
+                                                  TRUE ~ parole_violation_admissions), 
+    
+    probation_violation_admissions         = case_when((  probation_violation_admissions == technical_probation_violation_admissions) |
+                                                         (probation_violation_admissions == new_offense_probation_violation_admissions) 
+                                                     ~ NA,
+                                                     TRUE ~ probation_violation_admissions),
+    
+    total_supervision_violation_admissions = case_when((  total_supervision_violation_admissions == probation_violation_admissions) |
+                                                         (total_supervision_violation_admissions == parole_violation_admissions) 
+                                                       ~ NA,
+                                                       TRUE ~ total_supervision_violation_admissions),
+    
+    ## Add up non-missing subpopulations to get missing total populations (otherwise if total is non-missing keep value state submitted):
+    #POPULATION
+    parole_violation_population            = case_when((  as.numeric(technical_parole_violation_population)   >= 0 ) &
+                                                         (as.numeric(new_offense_parole_violation_population) >= 0)  &
+                                                         is.na(as.numeric(parole_violation_population))
+                                                       ~ as.numeric(technical_parole_violation_population) + as.numeric(new_offense_parole_violation_population),
+                                                       TRUE ~ as.numeric(parole_violation_population)),
+    
+    probation_violation_population         = case_when((  as.numeric(technical_probation_violation_population)   >= 0 ) &
+                                                         (as.numeric(new_offense_probation_violation_population) >= 0)  &
+                                                         is.na(as.numeric(probation_violation_population))
+                                                       ~ as.numeric(technical_probation_violation_population) + as.numeric(new_offense_probation_violation_population),
+                                                       TRUE ~ as.numeric(probation_violation_population)),
+    
+    total_new_offense_violation_population = case_when((  as.numeric(new_offense_probation_violation_population)   >= 0 ) &
+                                                         (as.numeric(new_offense_parole_violation_population) >= 0)  &
+                                                         is.na(as.numeric(total_new_offense_violation_population))
+                                                       ~ as.numeric(new_offense_probation_violation_population) + as.numeric(new_offense_parole_violation_population),
+                                                       TRUE ~ as.numeric(total_new_offense_violation_population)),
+    
+    total_technical_violation_population   = case_when((  as.numeric(technical_probation_violation_population)   >= 0 ) &
+                                                         (as.numeric(technical_parole_violation_population) >= 0)  &
+                                                         is.na(as.numeric(total_technical_violation_population))
+                                                       ~ as.numeric(technical_probation_violation_population) + as.numeric(technical_parole_violation_population),
+                                                       TRUE ~ as.numeric(total_technical_violation_population)),
+
+    total_supervision_violation_population = case_when((  as.numeric(probation_violation_population)   >= 0 ) &
+                                                         (as.numeric(parole_violation_population) >= 0)  &
+                                                         is.na(as.numeric(total_supervision_violation_population))
+                                                       ~ as.numeric(probation_violation_population) + as.numeric(parole_violation_population),
+                                                       TRUE ~ as.numeric(total_supervision_violation_population)),
+    
+    #ADMISSIONS
+    parole_violation_admissions            = case_when((  as.numeric(technical_parole_violation_admissions)   >= 0 ) &
+                                                         (as.numeric(new_offense_parole_violation_admissions) >= 0)  &
+                                                         is.na(as.numeric(parole_violation_admissions))
+                                                       ~ as.numeric(technical_parole_violation_admissions) + as.numeric(new_offense_parole_violation_admissions),
+                                                       TRUE ~ as.numeric(parole_violation_admissions)),
+    
+    probation_violation_admissions         = case_when((  as.numeric(technical_probation_violation_admissions)   >= 0 ) &
+                                                         (as.numeric(new_offense_probation_violation_admissions) >= 0)  &
+                                                         is.na(as.numeric(probation_violation_admissions))
+                                                       ~ as.numeric(technical_probation_violation_admissions) + as.numeric(new_offense_probation_violation_admissions),
+                                                       TRUE ~ as.numeric(probation_violation_admissions)),
+    
+    total_new_offense_violation_admissions = case_when((  as.numeric(new_offense_probation_violation_admissions)   >= 0 ) &
+                                                         (as.numeric(new_offense_parole_violation_admissions) >= 0)  &
+                                                         is.na(as.numeric(total_new_offense_violation_admissions))
+                                                       ~ as.numeric(new_offense_probation_violation_admissions) + as.numeric(new_offense_parole_violation_admissions),
+                                                       TRUE ~ as.numeric(total_new_offense_violation_admissions)),
+    
+    total_technical_violation_admissions   = case_when((  as.numeric(technical_probation_violation_admissions)   >= 0 ) &
+                                                         (as.numeric(technical_parole_violation_admissions) >= 0)  &
+                                                         is.na(as.numeric(total_technical_violation_admissions))
+                                                       ~ as.numeric(technical_probation_violation_admissions) + as.numeric(technical_parole_violation_admissions),
+                                                       TRUE ~ as.numeric(total_technical_violation_admissions)),
+    
+    total_supervision_violation_admissions = case_when((  as.numeric(probation_violation_admissions)   >= 0 ) &
+                                                         (as.numeric(parole_violation_admissions) >= 0)  &
+                                                         is.na(as.numeric(total_supervision_violation_admissions))
+                                                       ~ as.numeric(probation_violation_admissions) + as.numeric(parole_violation_admissions),
+                                                       TRUE ~ as.numeric(total_supervision_violation_admissions))
+    
+    
+  )
+
+###########################################################
+###########################################################
+
+
+
+
+
+
+
+
+write.xlsx(adm_pop_analysis, file = paste0(sp_data_path, "/Data/analysis/national_estimates/mclc_data_2024_handlingmissings.xlsx"))
 

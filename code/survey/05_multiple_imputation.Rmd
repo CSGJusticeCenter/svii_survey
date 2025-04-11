@@ -87,6 +87,28 @@ tablevals.pretty <- c('Overall Admissions',
 #read automated_clean to get data, reformat
 source("03_clean.R")
 
+#coding missings for calculating national estimates
+#REQUIRES MANUAL REVIEW OF SURVEY SUBMISSIONS/UPDATING!
+#source("special_missings.R")
+
+#all flags should be 0 (w/few exceptions) - if there is a 1 then check state and logic
+#table(check.dat$flag_error.na) #flag new offense violation admissions logic
+#table(check.dat$flag_error.np) #flag new offense violation population logic
+#table(check.dat$flag_error.ta) #flag technical violation admissions logic
+#table(check.dat$flag_error.tp) #flag technical violation population logic
+
+#print states/years/metrics where zeroes exist; should exist only for -77 special missing states (abolished parole)
+#cbind(state.zeroes,years.zeroes,var.zeroes)
+#stop program if other states have 0s in their data (-77 special missings)
+#stopifnot(states77 %in% state.zeroes)
+
+#stop program if analysis dataset has any NAs - there should only be special missings
+#stopifnot(nrow(data.frame(which(is.na(specialmissings), arr.ind=TRUE))) == 0)
+#if above check confirms analysis data has no NAs, then write
+#write.xlsx(specialmissings, file = paste0(sp_data_path, "/Data/mclc_data_2022_v9_specialmissings.xlsx"))
+
+#if above checks confirm data is ready for imputation, proceed and finalize imputation dataframe
+#adm_pop_analysis_with_bjs <- adm_pop_analysis_with_bjs1 #special missings code
 adm_pop_analysis_with_bjs <- adm_pop_analysis
 
 ################################################################################
@@ -228,6 +250,44 @@ print(xtable(cost.final[c("State","cost.pr.state","cost.pa.state","cost.tpr.stat
                                                                                   TRUE ~ NA_character_)
                                      ) %>%
                               select(-c(cost.pr.state,cost.pa.state,cost.tpr.state,cost.tpa.state)),
+                           align = c("llrrrr")),
+      include.rownames = FALSE,
+      type             = "html")
+```
+
+## `r as.numeric(last(refyear)) - 1` Costs
+
+The total annual cost for incarcerating **probation violators** in `r as.numeric(last(refyear)) - 1` is `r dollar_format()(total.pr.vp22)`. The total annual cost for incarcerating **parole violators** in `r as.numeric(last(refyear)) - 1` is `r dollar_format()(total.pa.vp22)`.
+
+<br>
+
+\noindent The total annual cost for incarcerating just those with **technical violations** in `r as.numeric(last(refyear)) - 1` is `r dollar_format()(total.tvp22)`.
+
+<br>
+
+\noindent The total annual cost for incarcerating just those with **new offense violations** in `r as.numeric(last(refyear)) - 1` is `r dollar_format()(total.novp22)`.
+
+<br>
+
+### `r as.numeric(last(refyear)) - 1` Costs by State
+
+Below is a table of these costs by state (no imputation). Note that missing cells indicate that a state did not submit `r as.numeric(last(refyear)) - 1` population data:
+
+<br>
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+print(xtable(cost.final[c("State","cost.pr.state22","cost.pa.state22","cost.tpr.state22","cost.tpa.state22")] %>%
+                              mutate(
+                                `Overall Probation Violator Cost`   = case_when(cost.pr.state22 >=0 ~ dollar_format()(cost.pr.state22),
+                                                                                  TRUE ~ NA_character_),
+                                `Overall Parole Violator Cost`      = case_when(cost.pa.state22 >=0 ~ dollar_format()(cost.pa.state22),
+                                                                                  TRUE ~ NA_character_),
+                                `Technical Probation Violator Cost` = case_when(cost.tpr.state22 >=0 ~ dollar_format()(cost.tpr.state22),
+                                                                                  TRUE ~ NA_character_),
+                                `Technical Parole Violator Cost`    = case_when(cost.tpa.state22 >=0 ~ dollar_format()(cost.tpa.state22),
+                                                                                  TRUE ~ NA_character_)
+                                     ) %>%
+                              select(-c(cost.pr.state22,cost.pa.state22,cost.tpr.state22,cost.tpa.state22)),
                            align = c("llrrrr")),
       include.rownames = FALSE,
       type             = "html")
