@@ -57,7 +57,6 @@ MCLCsurveyyear <- params$yearofsurvey
 #years of data
 year     <- as.character(2018:MCLCsurveyyear)
 refyear  <- as.character(2019:MCLCsurveyyear)
-missyear <- c(year) #as.character(2022:2023)  #use for changing handling of missing data years
 
 #for labeling tables in output
 tablevals.pretty <- c('Overall Admissions',
@@ -81,36 +80,8 @@ tablevals.pretty <- c('Overall Admissions',
                      'Population of New Crime Parole Violators'
                      )
 
-################################################################################
-#CLEAN & PREP DATA
-################################################################################
-
-#read automated_clean to get data, reformat
-source("03_clean.R")
-
-#coding missings for calculating national estimates
-#REQUIRES MANUAL REVIEW OF SURVEY SUBMISSIONS/UPDATING!
-#source("special_missings.R")
-
-#all flags should be 0 (w/few exceptions) - if there is a 1 then check state and logic
-#table(check.dat$flag_error.na) #flag new offense violation admissions logic
-#table(check.dat$flag_error.np) #flag new offense violation population logic
-#table(check.dat$flag_error.ta) #flag technical violation admissions logic
-#table(check.dat$flag_error.tp) #flag technical violation population logic
-
-#print states/years/metrics where zeroes exist; should exist only for -77 special missing states (abolished parole)
-#cbind(state.zeroes,years.zeroes,var.zeroes)
-#stop program if other states have 0s in their data (-77 special missings)
-#stopifnot(states77 %in% state.zeroes)
-
-#stop program if analysis dataset has any NAs - there should only be special missings
-#stopifnot(nrow(data.frame(which(is.na(specialmissings), arr.ind=TRUE))) == 0)
-#if above check confirms analysis data has no NAs, then write
-#write.xlsx(specialmissings, file = paste0(sp_data_path, "/Data/mclc_data_2022_v9_specialmissings.xlsx"))
-
-#if above checks confirm data is ready for imputation, proceed and finalize imputation dataframe
-#adm_pop_analysis_with_bjs <- adm_pop_analysis_with_bjs1 #special missings code
-adm_pop_analysis_with_bjs <- adm_pop_analysis
+##import data
+source("import.R")
 
 ################################################################################
 # IMPUTATION
