@@ -13,7 +13,7 @@ rmarkdown::render('05_multiple_imputation.Rmd',
                   output_format  = "html_document",
                   output_file = paste0(
                     'SVIIestimates_v',
-                    "5",
+                    "6",
                     "_",
                     Sys.Date(),
                     '.html'
@@ -30,3 +30,4 @@ rmarkdown::render('05_multiple_imputation.Rmd',
 #v3 - 3rd draft of data from Josh/Jess (using 2nd draft of data from Martha, plus additional cleaning, NO special missings code)
 #v4 - 4th draft of data from Josh/Jess (using 2nd draft of data from Martha, plus additional cleaning, NO special missings code, only change 2022-2023 data)
 #v5 - 5th draft of data from Martha (changes from 3rd draft, plus BJS data inclusion and other small changes from Martha)
+#v6 - 6th draft of data from Martha (changes from 5th draft, plus making ME supervision values as non-missing since they abolished parole)
